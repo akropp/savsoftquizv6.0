@@ -199,12 +199,18 @@ class Quiz extends BaseController
 		if(isset($fData[0])){
 			$fData=$this->makeRequiredArrayFormat($fData);
 		}
+		$gids=0;
+		if(is_array($fData['gids'])){
+			$gids=implode(',',$fData['gids']);
+		}else{
+			$gids=$fData['gids'];
+		}
 		$userdata=array(
 		'quiz_name'=>$fData['quiz_name'],
 		'description'=>$fData['description'],
 		'start_datetime'=>strtotime(str_replace("T"," ",$fData['start_datetime'])),
 		'end_datetime'=>strtotime(str_replace("T"," ",$fData['end_datetime'])),
-		'gids'=>implode(',',$fData['gids']),
+		'gids'=>$gids,
 		'max_attempt'=>$fData['max_attempt'],
 		'min_pass_percentage'=>$fData['min_pass_percentage'],
 		'correct_score'=>$fData['correct_score'],
@@ -216,9 +222,13 @@ class Quiz extends BaseController
 		);
 		$builder = $db1->table('sq_quiz');
 		$builder->where('id',$id);
-		$builder->update($userdata);		
-		$json_arr['status']="success"; $json_arr['id']=$id;	$json_arr['message']="Quiz added successfully"; return json_encode($json_arr); 
-		 
+		if ($builder->update($userdata)) {
+			$json_arr['status']="success"; $json_arr['id']=$id;	$json_arr['message']="Quiz added successfully";
+		} else{
+			$msg=$builder->error();
+			$json_arr['status']="failed"; 	$json_arr['message']=$msg;
+		}
+		return json_encode($json_arr); 
 	}
 	
 	public function addQuestionIntoQuiz(){
